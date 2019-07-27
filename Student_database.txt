@@ -1,0 +1,305 @@
+====================================== MainActivity.java ==================================================
+
+package com.example.dell.studentmanagemant;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText ename, eroll_no, emarks;
+    Button add, view, viewall, Show1, delete, modify;
+    SQLiteDatabase db;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+        initialize();
+        buttonClick();
+    }
+
+    private void initialize() {
+        ename = (EditText) findViewById(R.id.name);
+        eroll_no = (EditText) findViewById(R.id.roll_no);
+        emarks = (EditText) findViewById(R.id.marks);
+        add = (Button) findViewById(R.id.addbtn);
+        view = (Button) findViewById(R.id.viewbtn);
+        viewall = (Button) findViewById(R.id.viewallbtn);
+        delete = (Button) findViewById(R.id.deletebtn);
+        Show1 = (Button) findViewById(R.id.showbtn);
+        modify = (Button) findViewById(R.id.modifybtn);
+
+        db = openOrCreateDatabase("Student_manage", Context.MODE_PRIVATE, null);
+        db.execSQL("CREATE TABLE IF NOT EXISTS student(rollno INTEGER,name VARCHAR,marks INTEGER);");
+    }
+
+    private void buttonClick() {
+        add.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                if (eroll_no.getText().toString().trim().length() == 0 ||
+                        ename.getText().toString().trim().length() == 0 ||
+                        emarks.getText().toString().trim().length() == 0) {
+                    showMessage("Error", "Please enter all values");
+                    return;
+                }
+                db.execSQL("INSERT INTO student VALUES('" + eroll_no.getText() + "','" + ename.getText() +
+                        "','" + emarks.getText() + "');");
+                showMessage("Success", "Record added successfully");
+                clearText();
+            }
+        });
+        delete.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                if (eroll_no.getText().toString().trim().length() == 0) {
+                    showMessage("Error", "Please enter Rollno");
+                    return;
+                }
+                Cursor c = db.rawQuery("SELECT * FROM student WHERE rollno='" + eroll_no.getText() + "'", null);
+                if (c.moveToFirst()) {
+                    db.execSQL("DELETE FROM student WHERE rollno='" + eroll_no.getText() + "'");
+                    showMessage("Success", "Record Deleted");
+                } else {
+                    showMessage("Error", "Invalid Rollno");
+                }
+                clearText();
+            }
+        });
+        modify.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                if (eroll_no.getText().toString().trim().length() == 0) {
+                    showMessage("Error", "Please enter Rollno");
+                    return;
+                }
+                Cursor c = db.rawQuery("SELECT * FROM student WHERE rollno='" + eroll_no.getText() + "'", null);
+                if (c.moveToFirst()) {
+                    db.execSQL("UPDATE student SET name='" + ename.getText() + "',marks='" + emarks.getText() +
+                            "' WHERE rollno='" + eroll_no.getText() + "'");
+                    showMessage("Success", "Record Modified");
+                } else {
+                    showMessage("Error", "Invalid Rollno");
+                }
+                clearText();
+            }
+        });
+        view.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                if (eroll_no.getText().toString().trim().length() == 0) {
+                    showMessage("Error", "Please enter Rollno");
+                    return;
+                }
+                Cursor c = db.rawQuery("SELECT * FROM student WHERE rollno='" + eroll_no.getText() + "'", null);
+                if (c.moveToFirst()) {
+                    ename.setText(c.getString(1));
+                    emarks.setText(c.getString(2));
+                } else {
+                    showMessage("Error", "Invalid Rollno");
+                    clearText();
+                }
+            }
+        });
+        viewall.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Cursor c = db.rawQuery("SELECT * FROM student", null);
+                if (c.getCount() == 0) {
+                    showMessage("Error", "No records found");
+                    return;
+                }
+                StringBuffer buffer = new StringBuffer();
+                while (c.moveToNext()) {
+                    buffer.append("Rollno: " + c.getString(0) + "\n");
+                    buffer.append("Name: " + c.getString(1) + "\n");
+                    buffer.append("Marks: " + c.getString(2) + "\n\n");
+                }
+                showMessage("Student Details", buffer.toString());
+            }
+        });
+        Show1.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                showMessage("Student Management Application", "Developed By Khyati , Mansi and Soniya");
+            }
+        });
+
+    }
+
+    public void showMessage(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.show();
+    }
+
+    public void clearText() {
+        eroll_no.setText("");
+        ename.setText("");
+        emarks.setText("");
+        eroll_no.requestFocus();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+}
+
+
+============================================  content_main.xml ===========================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.example.dell.studentmanagemant.MainActivity"
+    tools:showIn="@layout/activity_main"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/roll_no"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter Roll No."
+        android:inputType="number" />
+
+
+    <EditText
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter Your Name" />
+
+    <EditText
+        android:id="@+id/marks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter Marks"
+        android:inputType="number" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="98dp" >
+
+        <Button
+            android:id="@+id/addbtn"
+            android:layout_width="140dp"
+            android:layout_height="90dp"
+            android:text="Add" />
+
+        <Button
+            android:id="@+id/deletebtn"
+            android:layout_width="140dp"
+            android:layout_height="90dp"
+            android:text="Delete" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="98dp" >
+
+        <Button
+            android:id="@+id/modifybtn"
+            android:layout_width="140dp"
+            android:layout_height="90dp"
+            android:text="Modify" />
+
+        <Button
+            android:id="@+id/viewbtn"
+            android:layout_width="140dp"
+            android:layout_height="90dp"
+            android:text="View" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.74" >
+
+        <Button
+            android:id="@+id/viewallbtn"
+            android:layout_width="140dp"
+            android:layout_height="90dp"
+            android:text="View all" />
+
+        <Button
+            android:id="@+id/showbtn"
+            android:layout_width="140dp"
+            android:layout_height="90dp"
+            android:text="Show" />
+
+    </LinearLayout>
+
+</LinearLayout>
